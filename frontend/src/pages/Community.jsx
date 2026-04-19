@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { MessageSquare, Heart, Share2, AlertCircle, Plus, Filter, Search, User, MapPin } from 'lucide-react';
 import { cn } from '../utils/cn';
 
@@ -38,9 +38,9 @@ export default function Community() {
 
   const [activeFilter, setActiveFilter] = useState('all');
 
-  const filteredPosts = posts.filter(post => 
+  const filteredPosts = useMemo(() => posts.filter(post => 
     activeFilter === 'all' ? true : post.type === activeFilter
-  );
+  ), [posts, activeFilter]);
 
   return (
     <div className="p-6 lg:p-10 max-w-4xl mx-auto w-full flex flex-col gap-8">
@@ -51,8 +51,8 @@ export default function Community() {
           <h2 className="text-4xl font-black font-display text-white tracking-tight leading-none">Community Hub</h2>
           <p className="text-slate-500 text-sm font-medium uppercase tracking-widest mt-3">Connect with fellow attendees</p>
         </div>
-        <button className="h-14 px-8 bg-brand-secondary text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-brand-secondary/80 transition-all flex items-center justify-center gap-2 shadow-xl shadow-brand-secondary/20 active:scale-95">
-          <Plus size={18} /> New Update
+        <button aria-label="Create New Update" className="h-14 px-8 bg-brand-secondary text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-brand-secondary/80 transition-all flex items-center justify-center gap-2 shadow-xl shadow-brand-secondary/20 active:scale-95">
+          <Plus size={18} aria-hidden="true" /> New Update
         </button>
       </div>
 
@@ -81,7 +81,7 @@ export default function Community() {
       </div>
 
       {/* Filter Bar */}
-      <div className="flex items-center gap-3 overflow-x-auto pb-2 no-scrollbar">
+      <div className="flex items-center gap-3 overflow-x-auto pb-2 no-scrollbar" role="tablist" aria-label="Post Filters">
         {['all', 'tip', 'help', 'official'].map((filter) => (
           <button
             key={filter}
@@ -92,6 +92,10 @@ export default function Community() {
                 ? "bg-brand-secondary text-white border-brand-secondary shadow-lg shadow-brand-secondary/20" 
                 : "bg-white/5 text-slate-400 border-white/10 hover:border-brand-secondary hover:text-white"
             )}
+            role="tab"
+            aria-selected={activeFilter === filter}
+            aria-controls={`panel-${filter}`}
+            id={`tab-${filter}`}
           >
             {filter}
           </button>
@@ -136,16 +140,16 @@ export default function Community() {
                 </p>
                 
                 <div className="flex items-center gap-8 mt-8 pt-6 border-t border-white/5">
-                  <button className="flex items-center gap-2.5 text-slate-500 hover:text-red-400 transition-all group/btn">
-                    <Heart size={18} className="group-hover/btn:scale-110 group-hover/btn:fill-red-400 transition-all" />
+                  <button aria-label={`Like post by ${post.user}`} className="flex items-center gap-2.5 text-slate-500 hover:text-red-400 transition-all group/btn">
+                    <Heart size={18} aria-hidden="true" className="group-hover/btn:scale-110 group-hover/btn:fill-red-400 transition-all" />
                     <span className="text-xs font-black">{post.likes}</span>
                   </button>
-                  <button className="flex items-center gap-2.5 text-slate-500 hover:text-brand-secondary transition-all group/btn">
-                    <MessageSquare size={18} className="group-hover/btn:scale-110 transition-all" />
+                  <button aria-label={`Reply to ${post.user}`} className="flex items-center gap-2.5 text-slate-500 hover:text-brand-secondary transition-all group/btn">
+                    <MessageSquare size={18} aria-hidden="true" className="group-hover/btn:scale-110 transition-all" />
                     <span className="text-xs font-black">Reply</span>
                   </button>
-                  <button className="flex items-center gap-2.5 text-slate-500 hover:text-white transition-all ml-auto">
-                    <Share2 size={18} />
+                  <button aria-label="Share post" className="flex items-center gap-2.5 text-slate-500 hover:text-white transition-all ml-auto">
+                    <Share2 size={18} aria-hidden="true" />
                   </button>
                 </div>
               </div>

@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { initAnalytics } from './firebase';
 import MainLayout from './layouts/MainLayout';
 import Dashboard from './pages/Dashboard';
 import Map from './pages/Map';
@@ -19,6 +20,10 @@ const Placeholder = ({ title }) => (
 );
 
 function App() {
+  useEffect(() => {
+    initAnalytics();
+  }, []);
+
   return (
     <BrowserRouter>
       <Routes>

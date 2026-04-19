@@ -1,26 +1,26 @@
-import React from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { MapPin, Navigation2, Search, Filter, Layers, ZoomIn, ZoomOut, ChevronRight, Info, AlertCircle, Plus, Shield } from 'lucide-react';
 import { cn } from '../utils/cn';
 
 export default function Map() {
-  const [activeZone, setActiveZone] = React.useState(null);
-  const [zoomScale, setZoomScale] = React.useState(1);
-  const [isPanning, setIsPanning] = React.useState(false);
-  const [position, setPosition] = React.useState({ x: 0, y: 0 });
+  const [activeZone, setActiveZone] = useState(null);
+  const [zoomScale, setZoomScale] = useState(1);
+  const [isPanning, setIsPanning] = useState(false);
+  const [position, setPosition] = useState({ x: 0, y: 0 });
 
-  const zones = [
+  const zones = useMemo(() => [
     { id: 'north', name: 'NORTH SECTOR', color: '#ef4444', status: 'CRITICAL', delay: '12m', density: '92%', recommendations: 'Use East Gate' },
     { id: 'south', name: 'SOUTH SECTOR', color: '#3b82f6', status: 'STABLE', delay: '2m', density: '35%', recommendations: 'Optimal path' },
     { id: 'east',  name: 'EAST WING',  color: '#f59e0b', status: 'WARNING', delay: '8m', density: '78%', recommendations: 'Moderate wait' },
     { id: 'west',  name: 'WEST WING',  color: '#a855f7', status: 'BUSY', delay: '15m', density: '65%', recommendations: 'Head to Sec B' },
-  ];
+  ], []);
 
-  const handleZoomIn = () => setZoomScale(prev => Math.min(prev + 0.2, 3));
-  const handleZoomOut = () => setZoomScale(prev => Math.max(prev - 0.2, 0.5));
-  const handleReset = () => {
+  const handleZoomIn = useCallback(() => setZoomScale(prev => Math.min(prev + 0.2, 3)), []);
+  const handleZoomOut = useCallback(() => setZoomScale(prev => Math.max(prev - 0.2, 0.5)), []);
+  const handleReset = useCallback(() => {
     setZoomScale(1);
     setPosition({ x: 0, y: 0 });
-  };
+  }, []);
 
   return (
     <div className="h-[calc(100vh-64px)] lg:h-[calc(100vh-80px)] w-full flex flex-col relative bg-slate-950 overflow-hidden iridescent-bg">
@@ -38,13 +38,13 @@ export default function Map() {
         </div>
         
         <div className="flex gap-3 pointer-events-auto">
-          <button className="h-12 px-6 bg-white/10 backdrop-blur-xl border border-white/10 rounded-2xl text-[10px] font-black uppercase tracking-widest text-white hover:bg-brand-secondary hover:border-brand-secondary transition-all flex items-center gap-2 shadow-xl">
-            <Filter size={18} /> Filters
+          <button aria-label="Filters" className="h-12 px-6 bg-white/10 backdrop-blur-xl border border-white/10 rounded-2xl text-[10px] font-black uppercase tracking-widest text-white hover:bg-brand-secondary hover:border-brand-secondary transition-all flex items-center gap-2 shadow-xl">
+            <Filter size={18} aria-hidden="true" /> Filters
           </button>
-          <div className="flex bg-white/10 backdrop-blur-xl rounded-2xl border border-white/10 shadow-xl p-1.5">
-             <button onClick={handleZoomIn} className="p-3 hover:bg-white/10 rounded-xl text-slate-400 hover:text-white transition-all"><ZoomIn size={20} /></button>
-             <button onClick={handleZoomOut} className="p-3 hover:bg-white/10 rounded-xl text-slate-400 hover:text-white transition-all"><ZoomOut size={20} /></button>
-             <button onClick={handleReset} className="p-3 hover:bg-white/10 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-white transition-all">Reset</button>
+          <div className="flex bg-white/10 backdrop-blur-xl rounded-2xl border border-white/10 shadow-xl p-1.5" role="group" aria-label="Zoom controls">
+             <button onClick={handleZoomIn} aria-label="Zoom In" className="p-3 hover:bg-white/10 rounded-xl text-slate-400 hover:text-white transition-all"><ZoomIn size={20} aria-hidden="true" /></button>
+             <button onClick={handleZoomOut} aria-label="Zoom Out" className="p-3 hover:bg-white/10 rounded-xl text-slate-400 hover:text-white transition-all"><ZoomOut size={20} aria-hidden="true" /></button>
+             <button onClick={handleReset} aria-label="Reset Map" className="p-3 hover:bg-white/10 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-white transition-all">Reset</button>
           </div>
         </div>
       </div>
@@ -91,6 +91,14 @@ export default function Map() {
                     strokeWidth="2.5"
                     className="transition-all duration-500 hover:fill-white/10"
                     onClick={() => setActiveZone(activeZone === zone.id ? null : zone.id)}
+                    role="button"
+                    tabIndex={0}
+                    aria-label={`Zone ${zone.name}`}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        setActiveZone(activeZone === zone.id ? null : zone.id);
+                      }
+                    }}
                   />
                 );
               })}
@@ -142,7 +150,7 @@ export default function Map() {
 
         {/* Floating Detail Overlay */}
         {activeZone && (
-          <div className="absolute bottom-12 left-12 md:w-[400px] bg-slate-900/80 backdrop-blur-3xl rounded-[3rem] shadow-[0_0_100px_rgba(0,0,0,0.5)] border border-white/10 p-10 flex flex-col gap-10 z-40 animate-float">
+          <div className="absolute bottom-12 left-12 md:w-[400px] bg-slate-900/80 backdrop-blur-3xl rounded-[3rem] shadow-[0_0_100px_rgba(0,0,0,0.5)] border border-white/10 p-10 flex flex-col gap-10 z-40 animate-float" role="dialog" aria-live="polite">
             {zones.filter(z => z.id === activeZone).map(zone => (
               <div key={zone.id}>
                 <div className="flex justify-between items-start">

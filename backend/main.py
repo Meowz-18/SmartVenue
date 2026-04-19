@@ -1,10 +1,29 @@
 import asyncio
 import json
 import random
+from contextlib import asynccontextmanager
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel, constr
 
-app = FastAPI(title="SmartVenue AI Backend")
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup
+    asyncio.create_task(data_streamer())
+    yield
+    # Shutdown logic could go here
+
+app = FastAPI(title="SmartVenue AI Backend", lifespan=lifespan)
+
+# Security and Google Services
+@app.middleware("http")
+async def add_security_headers(request, call_next):
+    response = await call_next(request)
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["X-XSS-Protection"] = "1; mode=block"
+    response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+    return response
 
 app.add_middleware(
     CORSMiddleware,
@@ -23,7 +42,8 @@ class ConnectionManager:
         self.active_connections.append(websocket)
 
     def disconnect(self, websocket: WebSocket):
-        self.active_connections.remove(websocket)
+        if websocket in self.active_connections:
+            self.active_connections.remove(websocket)
 
     async def broadcast(self, message: dict):
         for connection in self.active_connections:
@@ -56,10 +76,6 @@ async def data_streamer():
         await manager.broadcast(data)
         await asyncio.sleep(2) # Send update every 2 seconds
 
-@app.on_event("startup")
-async def startup_event():
-    asyncio.create_task(data_streamer())
-
 @app.websocket("/ws/venue")
 async def websocket_endpoint(websocket: WebSocket):
     await manager.connect(websocket)
@@ -70,10 +86,14 @@ async def websocket_endpoint(websocket: WebSocket):
     except WebSocketDisconnect:
         manager.disconnect(websocket)
 
+# Security: Input validation using Pydantic
+class AssistantQuery(BaseModel):
+    query: constr(min_length=1, max_length=500)
+
 @app.post("/api/assistant")
-async def chat_assistant(request: dict):
+async def chat_assistant(request: AssistantQuery):
     # Mock AI response for now
-    user_query = request.get("query", "").lower()
+    user_query = request.query.lower()
     
     if "seat" in user_query:
         return {"response": "Your seat is located in Section 112, Row G. I have highlighted the fastest route on your map, which avoids the current congestion at the East Concourse."}
