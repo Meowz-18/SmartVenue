@@ -1,12 +1,14 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState, Suspense, lazy } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { initAnalytics } from './firebase';
+import { initAnalytics, auth } from './firebase';
+import { onAuthStateChanged } from 'firebase/auth';
 import MainLayout from './layouts/MainLayout';
-import Dashboard from './pages/Dashboard';
-import Map from './pages/Map';
-import Assistant from './pages/Assistant';
-import Queues from './pages/Queues';
-import Community from './pages/Community';
+
+const Dashboard = lazy(() => import('./pages/Dashboard'));
+const Map = lazy(() => import('./pages/Map'));
+const Assistant = lazy(() => import('./pages/Assistant'));
+const Queues = lazy(() => import('./pages/Queues'));
+const Community = lazy(() => import('./pages/Community'));
 
 // Placeholder for other routes
 const Placeholder = ({ title }) => (
@@ -20,12 +22,22 @@ const Placeholder = ({ title }) => (
 );
 
 function App() {
+  const [user, setUser] = useState(null);
+
   useEffect(() => {
     initAnalytics();
+    
+    // Google Services: Authentication
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+    });
+
+    return () => unsubscribe();
   }, []);
 
   return (
     <BrowserRouter>
+      <Suspense fallback={<Placeholder title="Loading Module..." />}>
       <Routes>
         <Route path="/" element={<MainLayout />}>
           <Route index element={<Map />} />
@@ -35,6 +47,7 @@ function App() {
           <Route path="community" element={<Community />} />
         </Route>
       </Routes>
+      </Suspense>
     </BrowserRouter>
   );
 }

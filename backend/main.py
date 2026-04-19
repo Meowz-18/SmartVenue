@@ -2,22 +2,39 @@ import asyncio
 import json
 import random
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
 from pydantic import BaseModel, constr
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
+
+limiter = Limiter(key_func=get_remote_address)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Startup
+    """
+    Lifespan event handler for FastAPI.
+    Manages background tasks like the live data streamer.
+    """
     asyncio.create_task(data_streamer())
     yield
     # Shutdown logic could go here
 
 app = FastAPI(title="SmartVenue AI Backend", lifespan=lifespan)
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+app.add_middleware(GZipMiddleware, minimum_size=1000)
 
 # Security and Google Services
 @app.middleware("http")
-async def add_security_headers(request, call_next):
+async def add_security_headers(request: Request, call_next):
+    """
+    Adds essential HTTP security headers to all responses.
+    Prevents clickjacking, XSS, and enforces HTTPS.
+    """
     response = await call_next(request)
     response.headers["X-Content-Type-Options"] = "nosniff"
     response.headers["X-Frame-Options"] = "DENY"
@@ -27,10 +44,10 @@ async def add_security_headers(request, call_next):
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173", "https://smartvenue.app"],
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type"],
 )
 
 class ConnectionManager:
@@ -56,6 +73,10 @@ manager = ConnectionManager()
 
 # Simulate live venue data
 async def data_streamer():
+    """
+    Simulates a continuous stream of live venue metrics including
+    zone density and queue times, broadcasting to all connected clients.
+    """
     while True:
         # Generate random fluctuations in density and queue times
         data = {
@@ -78,6 +99,9 @@ async def data_streamer():
 
 @app.websocket("/ws/venue")
 async def websocket_endpoint(websocket: WebSocket):
+    """
+    WebSocket endpoint for real-time venue updates.
+    """
     await manager.connect(websocket)
     try:
         while True:
@@ -91,9 +115,14 @@ class AssistantQuery(BaseModel):
     query: constr(min_length=1, max_length=500)
 
 @app.post("/api/assistant")
-async def chat_assistant(request: AssistantQuery):
+@limiter.limit("20/minute")
+async def chat_assistant(request: Request, body: AssistantQuery):
+    """
+    AI Assistant endpoint to process user queries.
+    Rate limited to 20 requests per minute to prevent abuse.
+    """
     # Mock AI response for now
-    user_query = request.query.lower()
+    user_query = body.query.lower()
     
     if "seat" in user_query:
         return {"response": "Your seat is located in Section 112, Row G. I have highlighted the fastest route on your map, which avoids the current congestion at the East Concourse."}

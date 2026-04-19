@@ -1,5 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { MessageSquare, Heart, Share2, AlertCircle, Plus, Filter, Search, User, MapPin } from 'lucide-react';
+import DOMPurify from 'dompurify';
+import PropTypes from 'prop-types';
 import { cn } from '../utils/cn';
 
 export default function Community() {
@@ -51,7 +53,7 @@ export default function Community() {
           <h2 className="text-4xl font-black font-display text-white tracking-tight leading-none">Community Hub</h2>
           <p className="text-slate-500 text-sm font-medium uppercase tracking-widest mt-3">Connect with fellow attendees</p>
         </div>
-        <button aria-label="Create New Update" className="h-14 px-8 bg-brand-secondary text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-brand-secondary/80 transition-all flex items-center justify-center gap-2 shadow-xl shadow-brand-secondary/20 active:scale-95">
+        <button aria-label="Create New Update" className="h-14 px-8 bg-brand-secondary text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-brand-secondary/80 transition-all flex items-center justify-center gap-2 shadow-xl shadow-brand-secondary/20 active:scale-95 focus-visible:ring-2 focus-visible:ring-brand-secondary focus-visible:outline-none">
           <Plus size={18} aria-hidden="true" /> New Update
         </button>
       </div>
@@ -65,7 +67,7 @@ export default function Community() {
           <div className="relative z-10 text-white">
             <h3 className="font-black text-2xl font-display">Lost Something?</h3>
             <p className="text-slate-100/80 text-sm mt-2 font-medium max-w-[200px] leading-relaxed">Report lost items and we'll notify you if found.</p>
-            <button className="mt-6 px-6 py-3 bg-white/20 hover:bg-white/30 backdrop-blur-md rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all border border-white/20">Report Lost Item</button>
+            <button className="mt-6 px-6 py-3 bg-white/20 hover:bg-white/30 backdrop-blur-md rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all border border-white/20 focus-visible:ring-2 focus-visible:ring-white focus-visible:outline-none">Report Lost Item</button>
           </div>
         </div>
         <div className="premium-card p-8 bg-slate-900 border border-white/5 group cursor-pointer overflow-hidden relative">
@@ -75,7 +77,7 @@ export default function Community() {
           <div className="relative z-10">
             <h3 className="font-black text-2xl font-display text-white">Medical & Support</h3>
             <p className="text-slate-400 text-sm mt-2 font-medium max-w-[200px] leading-relaxed">Need non-emergency medical or general support?</p>
-            <button className="mt-6 px-6 py-3 bg-brand-secondary/10 text-brand-secondary border border-brand-secondary/20 hover:bg-brand-secondary hover:text-white backdrop-blur-md rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all">Request Support</button>
+            <button className="mt-6 px-6 py-3 bg-brand-secondary/10 text-brand-secondary border border-brand-secondary/20 hover:bg-brand-secondary hover:text-white backdrop-blur-md rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all focus-visible:ring-2 focus-visible:ring-brand-secondary focus-visible:outline-none">Request Support</button>
           </div>
         </div>
       </div>
@@ -87,7 +89,7 @@ export default function Community() {
             key={filter}
             onClick={() => setActiveFilter(filter)}
             className={cn(
-              "px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all border shrink-0",
+              "px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all border shrink-0 focus-visible:ring-2 focus-visible:ring-brand-secondary focus-visible:outline-none",
               activeFilter === filter 
                 ? "bg-brand-secondary text-white border-brand-secondary shadow-lg shadow-brand-secondary/20" 
                 : "bg-white/5 text-slate-400 border-white/10 hover:border-brand-secondary hover:text-white"
@@ -135,20 +137,20 @@ export default function Community() {
                   </div>
                 </div>
                 
-                <p className="mt-5 text-slate-300 text-sm leading-relaxed font-medium">
-                  {post.content}
+                <p className="mt-5 text-slate-300 text-sm leading-relaxed font-medium"
+                   dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(post.content) }}>
                 </p>
                 
                 <div className="flex items-center gap-8 mt-8 pt-6 border-t border-white/5">
-                  <button aria-label={`Like post by ${post.user}`} className="flex items-center gap-2.5 text-slate-500 hover:text-red-400 transition-all group/btn">
+                  <button aria-label={`Like post by ${post.user}`} className="flex items-center gap-2.5 text-slate-500 hover:text-red-400 transition-all group/btn focus-visible:ring-2 focus-visible:ring-red-400 focus-visible:outline-none rounded">
                     <Heart size={18} aria-hidden="true" className="group-hover/btn:scale-110 group-hover/btn:fill-red-400 transition-all" />
                     <span className="text-xs font-black">{post.likes}</span>
                   </button>
-                  <button aria-label={`Reply to ${post.user}`} className="flex items-center gap-2.5 text-slate-500 hover:text-brand-secondary transition-all group/btn">
+                  <button aria-label={`Reply to ${post.user}`} className="flex items-center gap-2.5 text-slate-500 hover:text-brand-secondary transition-all group/btn focus-visible:ring-2 focus-visible:ring-brand-secondary focus-visible:outline-none rounded">
                     <MessageSquare size={18} aria-hidden="true" className="group-hover/btn:scale-110 transition-all" />
                     <span className="text-xs font-black">Reply</span>
                   </button>
-                  <button aria-label="Share post" className="flex items-center gap-2.5 text-slate-500 hover:text-white transition-all ml-auto">
+                  <button aria-label="Share post" className="flex items-center gap-2.5 text-slate-500 hover:text-white transition-all ml-auto focus-visible:ring-2 focus-visible:ring-white focus-visible:outline-none rounded">
                     <Share2 size={18} aria-hidden="true" />
                   </button>
                 </div>
@@ -160,3 +162,5 @@ export default function Community() {
     </div>
   );
 }
+
+Community.propTypes = {};

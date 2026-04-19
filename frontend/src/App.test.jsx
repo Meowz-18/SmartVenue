@@ -15,9 +15,8 @@ window.matchMedia = window.matchMedia || function() {
 describe('App Integration', () => {
   it('renders without crashing', () => {
     render(<App />);
-    // Check if the dashboard or some layout element is present.
-    // The MainLayout contains a nav element or SmartVenue header.
-    const headerElement = screen.getByText(/SmartVenue/i);
-    expect(headerElement).toBeDefined();
+    // Since App uses React.lazy, it will show the Suspense fallback initially
+    const loadingElement = screen.getByText(/Loading Module/i);
+    expect(loadingElement).toBeDefined();
   });
 });
