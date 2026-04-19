@@ -175,7 +175,7 @@ export default function Dashboard() {
              </div>
             
             <div className="flex-1 w-full min-h-0 relative z-10">
-              <ResponsiveContainer width="100%" height="100%">
+              <ResponsiveContainer width="99%" height="100%">
                 <AreaChart data={densityData} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
                   <defs>
                     <linearGradient id="colorPrimary" x1="0" y1="0" x2="0" y2="1">
@@ -233,7 +233,7 @@ export default function Dashboard() {
                </div>
             </div>
             <div className="flex-1 w-full min-h-0">
-              <ResponsiveContainer width="100%" height="100%">
+              <ResponsiveContainer width="99%" height="100%">
                 <BarChart data={queueData} margin={{ top: 0, right: 0, left: -20, bottom: 0 }} barSize={60}>
                   <XAxis dataKey="name" stroke="#ffffff" fontSize={11} fontWeight={900} tickLine={false} axisLine={false} tick={{dy: 10, fill: '#ffffff'}} />
                   <YAxis stroke="#ffffff" fontSize={11} fontWeight={900} tickLine={false} axisLine={false} tick={{fill: '#ffffff'}} />
